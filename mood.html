@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Diary</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f6fc;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: chocolate;
+        }
+
+        .user-badge {
+            background: #e8f4f8;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #4a90e2;
+            font-weight: bold;
+        }
+
+        .not-logged-in {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .not-logged-in h2 {
+            color: #EA9276;
+        }
+
+        .not-logged-in button {
+            background-color: chocolate;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .not-logged-in button:hover {
+            background-color: #EA9276;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            background: chocolate;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #b8651b;
+        }
+
+        #view-diary {
+            background: #50b26b;
+            white-space: nowrap;
+        }
+
+        #view-diary:hover {
+            background: #3c9657;
+        }
+
+        canvas {
+            margin-top: 20px;
+        }
+
+        .entry {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #4a90e2;
+        }
+
+        .entry h3 {
+            margin: 0 0 10px 0;
+            color: #4a90e2;
+        }
+
+        .entry p {
+            margin: 5px 0 0;
+            line-height: 1.6;
+        }
+
+        #entries {
+            margin-top: 30px;
+        }
+
+        #entries h2 {
+            color: chocolate;
+            border-bottom: 2px solid #f2f6fc;
+            padding-bottom: 10px;
+        }
+
+        .no-entries {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        .diary-content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📔 Your Diary</h1>
+        
+        <!-- Not logged in message -->
+        <div id="notLoggedIn" class="not-logged-in">
+            <h2>Please Login First</h2>
+            <p>You need to be logged in to access your diary.</p>
+            <button onclick="goToLogin()">Go to Login</button>
+        </div>
+
+        <!-- Diary content (shown when logged in) -->
+        <div id="diaryContent" class="diary-content">
+            <div class="user-badge">
+                📝 Diary of <span id="currentUserName"></span>
+            </div>
+            
+            <form id="mood-form">
+                <div class="form-top">
+                    <input type="date" id="date" required>
+                    <button type="button" id="view-diary">📖 View Diary</button>
+                </div>
+
+                <select id="mood">
+                    <option value="happy">😊 Happy</option>
+                    <option value="sad">😢 Sad</option>
+                    <option value="anxious">😰 Anxious</option>
+                    <option value="neutral">😐 Neutral</option>
+                    <option value="excited">🤩 Excited</option>
+                    <option value="tired">😴 Tired</option>
+                </select>
+
+                <textarea id="reflection" placeholder="Write your thoughts for today..." required></textarea>
+                <button type="submit">💾 Save Entry</button>
+            </form>
+
+            <canvas id="moodChart"></canvas>
+            <div id="entries"></div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const notLoggedInDiv = document.getElementById('notLoggedIn');
+        const diaryContentDiv = document.getElementById('diaryContent');
+        const currentUserNameSpan = document.getElementById('currentUserName');
+        const form = document.getElementById('mood-form');
+        const entriesDiv = document.getElementById('entries');
+        const viewDiaryBtn = document.getElementById('view-diary');
+        const ctx = document.getElementById('moodChart');
+        
+        let chart = null;
+        let currentUserEmail = null;
+
+        // Mood emoji mapping
+        const moodEmojis = {
+            happy: '😊',
+            sad: '😢',
+            anxious: '😰',
+            neutral: '😐',
+            excited: '🤩',
+            tired: '😴'
+        };
+
+        // Check if user is logged in
+        function checkLoginStatus() {
+            const userEmail = localStorage.getItem('userEmail');
+            const userName = localStorage.getItem('userName');
+            
+            if (userEmail) {
+                // User is logged in
+                currentUserEmail = userEmail;
+                notLoggedInDiv.style.display = 'none';
+                diaryContentDiv.style.display = 'block';
+                currentUserNameSpan.textContent = userName || userEmail;
+                
+                // Set today's date as default
+                document.getElementById('date').valueAsDate = new Date();
+                
+                // Load user's diary data
+                renderChart();
+                displayEntries();
+            } else {
+                // User is not logged in
+                notLoggedInDiv.style.display = 'block';
+                diaryContentDiv.style.display = 'none';
+            }
+        }
+
+        // Redirect to login page
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        // Get user-specific localStorage key
+        function getUserStorageKey() {
+            return `moodJournal_${currentUserEmail}`;
+        }
+
+        // Get data from localStorage for current user
+        function getMoodData() {
+            const key = getUserStorageKey();
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : {};
+        }
+
+        // Save data to localStorage for current user
+        function saveMoodData(data) {
+            const key = getUserStorageKey();
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // Handle mood form submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const date = document.getElementById('date').value;
+            const mood = document.getElementById('mood').value;
+            const reflection = document.getElementById('reflection').value;
+
+            if (!date) {
+                alert('Please select a date!');
+                return;
+            }
+
+            // Get current user's data
+            const moodData = getMoodData();
+            
+            // Save new entry
+            moodData[date] = { mood, reflection };
+            saveMoodData(moodData);
+
+            // Reset form
+            form.reset();
+            document.getElementById('date').valueAsDate = new Date();
+            
+            alert('✅ Entry saved for ' + date);
+            
+            // Update chart and display entries
+            renderChart();
+            displayEntries();
+        });
+
+        // Display all diary entries below
+        function displayEntries() {
+            const moodData = getMoodData();
+            const savedEntries = Object.entries(moodData);
+
+            if (savedEntries.length === 0) {
+                entriesDiv.innerHTML = '<div class="no-entries">No entries yet! Start writing your thoughts. 📝</div>';
+                return;
+            }
+
+            // Sort by date (newest first)
+            savedEntries.sort(([a], [b]) => new Date(b) - new Date(a));
+
+            let html = '<h2>📘 All Diary Entries</h2>';
+            savedEntries.forEach(([date, { mood, reflection }]) => {
+                html += `
+                    <div class="entry">
+                        <h3>${moodEmojis[mood]} ${date} - ${mood.toUpperCase()}</h3>
+                        <p>${reflection}</p>
+                    </div>
+                `;
+            });
+            
+            entriesDiv.innerHTML = html;
+        }
+
+        // View diary button click
+        viewDiaryBtn.addEventListener('click', () => {
+            displayEntries();
+        });
+
+        // Render mood chart
+        function renderChart() {
+            const moodData = getMoodData();
+            const dates = Object.keys(moodData).sort((a, b) => new Date(a) - new Date(b));
+            const moods = dates.map(date => moodData[date].mood);
+
+            if (dates.length === 0) {
+                if (chart) {
+                    chart.destroy();
+                    chart = null;
+                }
+                return;
+            }
+
+            const moodScores = { 
+                happy: 5, 
+                excited: 4.5,
+                neutral: 3, 
+                tired: 2.5,
+                anxious: 2, 
+                sad: 1 
+            };
+            const scores = moods.map(m => moodScores[m] || 0);
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Mood Trend',
+                        data: scores,
+                        borderWidth: 3,
+                        borderColor: '#4a90e2',
+                        backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#4a90e2',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            max: 6,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Check login status on page load
+        window.addEventListener('load', () => {
+            checkLoginStatus();
+        });
+    </script>
+</body>
+</html>

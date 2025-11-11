@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 360px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #EA9276;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin: 20px 0;
+            text-align: left;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #EA9276;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: #EA9276;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(234, 146, 118, 0.2);
+        }
+
+        .btn {
+            background-color: #d2691e;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #EA9276;
+            transform: translateY(-2px);
+        }
+
+        .register-link {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .register-link a {
+            color: #EA9276;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .welcome-section {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .welcome-section h2 {
+            color: #EA9276;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 5px solid #EA9276;
+        }
+
+        .user-info p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        .loading {
+            color: #EA9276;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Form -->
+        <div id="loginForm">
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Log in to access your mental health dashboard</p>
+            
+            <div class="input-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="you@example.com" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            
+            <button class="btn" onclick="login()">Login Securely</button>
+            <div class="loading" id="loadingText" style="display:none;">Logging you in...</div>
+            
+            <p class="register-link">
+                Don't have an account? 
+                <a href="registration_form.html">Register here</a>
+            </p>
+        </div>
+
+        <!-- Welcome Section (shown when logged in) -->
+        <div id="welcomeSection" class="welcome-section">
+            <h2>Hello, <span id="displayName">User</span>!</h2>
+            <div class="user-info">
+                <p><strong>Name:</strong> <span id="displayName2"></span></p>
+                <p><strong>Email:</strong> <span id="displayEmail"></span></p>
+            </div>
+            <button class="btn" onclick="continueToDashboard()">
+                Continue to Dashboard
+            </button>
+            <button class="btn logout-btn" onclick="logout()">
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Check session on page load
+        window.addEventListener('DOMContentLoaded', checkExistingSession);
+
+        async function checkExistingSession() {
+            const sessionToken = localStorage.getItem('sessionToken');
+            
+            if (!sessionToken) return;
+
+            try {
+                const response = await fetch("http://localhost:5000/api/verify-session", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionToken })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showWelcomeSection(result.user);
+                } else {
+                    clearSession();
+                }
+            } catch (error) {
+                console.error("Session check failed:", error);
+                clearSession();
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const loadingText = document.getElementById("loadingText");
+
+            if (!email || !password) {
+                alert("Please fill in both email and password.");
+                return;
+            }
+
+            loadingText.style.display = "block";
+            document.querySelector(".btn").disabled = true;
+
+            try {
+                const response = await fetch("http://localhost:5000/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    localStorage.setItem("sessionToken", result.sessionToken);
+                    localStorage.setItem("userName", result.user.name);
+                    localStorage.setItem("userEmail", result.user.email);
+                    
+                    showWelcomeSection(result.user);
+                } else {
+                    alert(result.error || "Login failed. Please try again.");
+                }
+            } catch (error) {
+                alert("Cannot connect to server. Is the backend running on http://localhost:5000?");
+                console.error(error);
+            } finally {
+                loadingText.style.display = "none";
+                document.querySelector(".btn").disabled = false;
+            }
+        }
+
+        function showWelcomeSection(user) {
+            document.getElementById("loginForm").style.display = "none";
+            document.getElementById("welcomeSection").style.display = "block";
+            document.getElementById("displayName").textContent = user.name;
+            document.getElementById("displayName2").textContent = user.name;
+            document.getElementById("displayEmail").textContent = user.email;
+        }
+
+        function continueToDashboard() {
+            window.location.href = "minor project.html";  // Your main app page
+        }
+
+        async function logout() {
+            const sessionToken = localStorage.getItem("sessionToken");
+            
+            if (sessionToken) {
+                try {
+                    await fetch("http://localhost:5000/api/logout", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sessionToken })
+                    });
+                } catch (e) {
+                    console.log("Logout request failed (offline?)");
+                }
+            }
+
+            clearSession();
+            document.getElementById("email").value = "";
+            document.getElementById("password").value = "";
+            location.reload();
+        }
+
+        function clearSession() {
+            localStorage.removeItem("sessionToken");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userEmail");
+        }
+
+        // Allow Enter key to login
+        document.addEventListener("keypress", function(e) {
+            if (e.key === "Enter" && document.getElementById("loginForm").style.display !== "none") {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>

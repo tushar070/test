@@ -1,0 +1,146 @@
+/* ----- Support Groups Page ----- */
+
+/* Header Image for Support Page */
+.support-header {
+  position: relative;
+  height: 250px;
+  background: url("https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=1200&q=80")
+    no-repeat center center/cover;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.support-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 0;
+}
+
+.support-header h1 {
+  position: relative;
+  z-index: 1;
+  font-size: 2.8rem;
+  font-weight: 700;
+}
+
+.support-header nav {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+}
+
+.support-header nav ul {
+  display: flex;
+  gap: 25px;
+  list-style: none;
+}
+
+.support-header nav a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.support-header nav a:hover,
+.support-header nav a.active {
+  color: #c2f0d4;
+}
+
+/* Intro Section */
+.intro {
+  text-align: center;
+  padding: 60px 15%;
+}
+
+.intro h2 {
+  color: #de660b;
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.intro p {
+  color: #555;
+  font-size: 1.1rem;
+}
+
+/* Group Cards */
+.group-types {
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+  padding: 0 10% 60px;
+}
+
+.group-card {
+  display: flex;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.group-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.group-card img {
+  width: 40%;
+  height: 230px;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 25px;
+  width: 60%;
+}
+
+.card-content h3 {
+  color: #de660b;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.card-content p {
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.btn {
+  display: inline-block;
+  background: #de660b;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+
+.btn:hover {
+  background: #b8510b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .group-card {
+    flex-direction: column;
+  }
+
+  .group-card img {
+    width: 100%;
+    height: 200px;
+  }
+
+  .card-content {
+    width: 100%;
+  }
+}

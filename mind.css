@@ -1,0 +1,126 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Body */
+body {
+  background-color: #f7faf7;
+  color: #333;
+  line-height: 1.6;
+}
+header {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  color: white;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Background image (blurred) */
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("mindfully.jpg"); /* 👈 make sure the image name/path is correct */
+  background-size: cover;
+  background-position: center;
+  filter: blur(6px) brightness(0.6);
+  transform: scale(1.1);
+  z-index: 0;
+}
+
+/* Text over the image */
+.header-content {
+  position: relative;
+  z-index: 1;
+}
+
+header h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+}
+
+
+/* Exercises */
+main {
+  padding: 60px 10%;
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+}
+
+.exercise {
+  display: flex;
+  align-items: center;
+  background: #fffefe;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.exercise:hover {
+  transform: translateY(-5px);
+}
+
+.exercise img {
+  width: 40%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.exercise .content {
+  padding: 25px;
+  width: 60%;
+}
+
+.exercise h2 {
+  color: #e16a20;
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.exercise p {
+  color: #555;
+}
+
+/* Footer */
+footer {
+  background: #de7417;
+  color: white;
+  text-align: center;
+  padding: 25px 0;
+  margin-top: 50px;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .exercise {
+    flex-direction: column;
+  }
+
+  .exercise img {
+    width: 100%;
+    height: 200px;
+  }
+
+  .exercise .content {
+    width: 100%;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+}
